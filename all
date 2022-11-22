@@ -1,0 +1,600 @@
+//Semaphore Mutex
+
+import java.util.concurrent.Semaphore;
+
+class sem{
+    static Semaphore readLock = new Semaphore(1);
+    static Semaphore writeLock = new Semaphore(1);
+    static int readCount = 0;
+
+    static class Read implements Runnable {
+        @Override
+        public void run() {
+            try {
+                readLock.acquire();
+                readCount++;
+                if (readCount == 1) {
+                    writeLock.acquire();
+                }
+                readLock.release();
+
+                System.out.println("Thread "+Thread.currentThread().getName() + " is READING");
+                Thread.sleep(1500);
+                System.out.println("Thread "+Thread.currentThread().getName() + " has FINISHED READING");
+
+                readLock.acquire();
+                readCount--;
+                if(readCount == 0) {
+                    writeLock.release();
+                }
+                readLock.release();
+            } catch (InterruptedException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    static class Write implements Runnable {
+        @Override
+        public void run() {
+            try {
+                writeLock.acquire();
+                System.out.println("Thread "+Thread.currentThread().getName() + " is WRITING");
+                Thread.sleep(2500);
+                System.out.println("Thread "+Thread.currentThread().getName() + " has finished WRITING");
+                writeLock.release();
+            } catch (InterruptedException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        Read read = new Read();
+        Write write = new Write();
+        
+        Thread t1 = new Thread(read);
+        t1.setName("thread1");
+        Thread t2 = new Thread(read);
+        t2.setName("thread2");
+        Thread t3 = new Thread(write);
+        t3.setName("thread3");
+        Thread t4 = new Thread(read);
+        t4.setName("thread4");
+        t1.start();
+        t3.start();
+        t2.start();
+        t4.start();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+//FCFS
+
+import java.util.*;
+import java.text.*;
+
+class fcfs{
+    static void findWaitingTime(int processes[] ,int n,int bt[],int wt[]){
+        wt[0]=0;
+        for (int i=1;i<n;i++){
+            wt[i]=bt[i-1]+wt[i-1];
+        }
+    }
+    static void findTurnaroundTime(int processes[],int n,int bt[],int wt[],int tat[]){
+        for (int i=0;i<n;i++){
+            tat[i]=bt[i]+wt[i];
+        }
+    }
+
+    static void findAverageTime(int processes[],int n,int bt[]) {
+        int wt[] = new int[n];
+        int tat[] = new int[n];
+        int totaltat = 0, totalwaiting = 0;
+        findWaitingTime(processes, n, bt, wt);
+        findTurnaroundTime(processes, n, bt, wt, tat);
+        System.out.println("processs"+"\t\t"+"BT"+"\t\t\t"+"WT"+"\t\t\t"+"TAT");
+        for (int k=0;k<n;k++){
+            System.out.println(processes[k]+"\t\t\t\t"+bt[k]+"\t\t\t"+wt[k]+"\t\t\t"+tat[k]);
+        }
+    }
+    public static void main(String[] args) throws ParseException{
+        Scanner s =new Scanner(System.in);
+        int n =s.nextInt();
+        int processes[] =new int[n];
+        int bt[]=new int[n];
+        for (int j=0;j<n;j++){
+            System.out.println("enter the processes");
+            processes[j]=s.nextInt();
+            System.out.println("enter the bus time");
+            bt[j]=s.nextInt();
+        }
+        findAverageTime(processes,n,bt);
+    }
+}
+
+
+
+
+
+
+
+
+//Round Robin
+
+import java.util.Scanner;
+
+public class rr {
+    static void findWT(int processes[], int n, int bt[], int wt[], int q) {
+        int rem_bt[] = new int[n];
+        for (int i = 0; i < n; i++) {
+            rem_bt[i] = bt[i];
+        }
+        int t = 0;
+        while (true) {
+            boolean done = true;
+            for (int j = 0; j < n; j++) {
+                if (rem_bt[j] > 0) {
+                    done = false;
+                    if (rem_bt[j] > q) {
+                        t += q;
+                        rem_bt[j] -= q;
+                    } else {
+                        t = t + rem_bt[j];
+                        wt[j] = t - bt[j];
+                        rem_bt[j] = 0;
+                    }
+                }
+            }
+            if (done == true)
+                break;
+        }
+    }
+
+    static void findTAT(int[] processes, int n, int[] bt, int[] wt, int[] tat) {
+        for (int k = 0; k < n; k++) {
+            tat[k] = bt[k] + wt[k];
+        }
+    }
+
+    static void findAvreageTime(int processes[], int n, int q, int bt[]) {
+        int wt[] = new int[n];
+        int tat[] = new int[n];
+        findWT(processes, n, bt, wt, q);
+        findTAT(processes, n, bt, wt, tat);
+        System.out.println("processs" + "\t\t" + "BT" + "\t\t\t" + "WT" + "\t\t\t" + "TAT");
+        for (int k = 0; k < n; k++) {
+            System.out.println(processes[k] + "\t\t\t\t" + bt[k] + "\t\t\t" + wt[k] + "\t\t\t" + tat[k]);
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner s = new Scanner(System.in);
+        int n = s.nextInt();
+        int processes[] = new int[n];
+        int bt[] = new int[n];
+        for (int i = 0; i < n; i++) {
+            System.out.println("enter processes");
+            processes[i] = s.nextInt();
+            System.out.println("enter burst time");
+            bt[i] = s.nextInt();
+        }
+        int q = 2;
+        findAvreageTime(processes, n, q, bt);
+    }
+}
+
+
+
+
+
+
+
+
+//First Fit
+
+import java.util.*;
+
+class first {
+    int m, p;
+    int[] memsize = new int[10];
+    int[] process = new int[10];
+    Scanner s = new Scanner(System.in);
+
+    public void insert() {
+        System.out.println("enter the no of size memory");
+        m = s.nextInt();
+        System.out.println("enter the size of memory");
+        for (int i = 0; i < m; i++) {
+            memsize[i] = s.nextInt();
+        }
+
+        System.out.println("enter the no of processes");
+        p = s.nextInt();
+        System.out.println("enter the process");
+        for (int j = 0; j < p; j++) {
+            process[j] = s.nextInt();
+        }
+    }
+
+    public void fit() {
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (memsize[j] >= process[i]) {
+                    System.out.println("The memory  blocks " + memsize[j] + "assign to" + process[i]);
+
+                    memsize[j] = -1;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+public class first_fit {
+    public static void main(String[] args) {
+        first f = new first();
+        f.insert();
+        f.fit();
+    }
+}
+
+
+
+
+
+
+
+//Next Fit
+
+import java.util.*;
+
+public class nextfit {
+    static void NextFit(int blockSize[], int m, int processSize[], int n) {
+        int allocation[] = new int[n], j = 0;
+        Arrays.fill(allocation, -1);
+        for (int i = 0; i < n; i++) {
+            int count = 0;
+            while (j < m) {
+                count++;
+                if (blockSize[j] >= processSize[i]) {
+                    allocation[i] = j;
+                    blockSize[j] -= processSize[i];
+                    break;
+                }
+                j = (j + 1) % m;
+            }
+        }
+
+        System.out.print("tProcess Size\tBlock no.\n");
+        for (int i = 0; i < n; i++) {
+            System.out.print(processSize[i]
+                    + "\t\t\t\t");
+            if (allocation[i] != -1) {
+                System.out.print(allocation[i] + 1);
+            } else {
+                System.out.print("Not Allocated");
+            }
+            System.out.println("");
+        }
+    }
+
+    static public void main(String[] args) {
+        int blockSize[] = { 5, 10, 20 };
+        int processSize[] = { 10, 20, 5 };
+        int m = blockSize.length;
+        int n = processSize.length;
+        NextFit(blockSize, m, processSize, n);
+    }
+}
+
+
+
+
+
+
+//Worst Fit
+
+import java.util.*;
+
+class w_fit {
+    int memsize[] = new int[6], processsize[] = new int[6], m, p;
+    int temp = 0;
+
+    Scanner sc = new Scanner(System.in);
+    public void insert() {
+        System.out.println("Enter the no of memory blocks");
+        m = sc.nextInt();
+        for (int i = 0; i < m; i++) {
+            memsize[i] = sc.nextInt();
+        }
+        System.out.println("Enter the no of process  blocks");
+        p = sc.nextInt();
+        for (int j = 0; j < p; j++) {
+            processsize[j] = sc.nextInt();
+
+        }
+    }
+
+    public void sort() {
+        for (int i = 0; i < m; i++) {
+            for (int j = i; j < m; j++) {
+                if (memsize[i] < memsize[j]) {
+                    temp = memsize[i];
+                    memsize[i] = memsize[j];
+                    memsize[j] = temp;
+                }
+            }
+        }
+    }
+
+    public void fit() {
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (memsize[j] > processsize[i]) {
+                    System.out.println("The memory  blocks " + memsize[j] + "assign to" + processsize[i]);
+                    memsize[j] = -1;
+                    break;
+                }
+            }
+        }
+    }
+
+    public void display() {
+        System.out.println("The no of memory  blocks are");
+        for (int i = 0; i < m; i++) {
+            System.out.println(memsize[i] + " ");
+        }
+    }
+}
+
+public class worstfit {
+    public static void main(String args[]) {
+        w_fit b = new w_fit();
+        b.insert();
+        b.sort();
+        b.display();
+        b.fit();
+    }
+}
+
+
+
+
+
+
+
+//Page Replacement
+//FIFO
+
+#include<iostream>
+using namespace std;
+
+bool is_present(int n,int frame[],int framesize){
+    int flag=0;
+    for(int i=0;i<framesize;i++){
+        if(frame[i]==n){
+            flag=1;
+            break;
+        }
+    }
+    if(flag==1)
+        return true;
+    else
+        return false;
+}
+
+int main(){
+    int noofpages;
+    cout<<"Enter the number of pages: ";
+    cin>>noofpages;
+    int sequence[noofpages];
+    cout<<"Enter the name of pages: "<<endl;
+    for(int i=0;i<noofpages;i++){
+        cin>>sequence[i];
+    }
+    int framesize;
+    cout<<"Enter the number of frames: ";
+    cin>>framesize;
+    int faults=framesize,hits=0,
+    int p=0;
+    int frame[framesize];
+    for(int i=0;i<framesize;i++){
+        frame[i]=sequence[i];
+    }
+    for(int i=framesize;i<noofpages;i++){
+        if(!is_present(sequence[i],frame,framesize)){
+            if(p<framesize){
+                frame[p]=sequence[i];
+                p++;
+            }
+            else{
+                p=0;
+                frame[p]=sequence[i];
+                p++;
+            }
+            faults++;
+        }
+        else{
+            hits++;
+        }
+    }
+    cout<<"faults: "<<faults<<endl;
+    cout<<"Hits: "<<hits<<endl;
+    return 0;
+}
+
+
+
+
+
+
+
+
+//Optimal
+
+#include<iostream>
+using namespace std;
+
+bool is_present(int n,int frame[],int framesize){
+    int flag=0;
+    for(int i=0;i<framesize;i++){
+        if(frame[i]==n){
+            flag=1;
+            break;
+        }
+    }
+    if(flag==1)
+        return true;
+    else
+        return false;
+}
+
+int search(int frame[],int framesize,int sequence[],int noofpages,int j){
+    int flag=0;
+    int min=127;
+    for(int i=0;i<framesize;i++){
+        flag=0;
+        for(int k=framesize;k<j;k++){
+            if(frame[i]==sequence[k]){
+                flag=1;
+                if(i<min){
+                    min=i;
+                }
+            }
+        }
+        if(flag==0){
+            return i;
+        }
+    }
+    return min;
+}
+
+int main(){
+    int noofpages;
+    cout<<"Enter the number of pages: ";
+    cin>>noofpages;
+    int sequence[noofpages];
+    cout<<"Enter the name of pages: "<<endl;
+    for(int i=0;i<noofpages;i++){
+        cin>>sequence[i];
+    }
+    int framesize;
+    cout<<"Enter the number of frames: ";
+    cin>>framesize;
+    int faults=framesize,hits=0,p=0,max=0;
+    int frame[framesize];
+    for(int i=0;i<framesize;i++){
+        frame[i]=sequence[i];
+    }
+    for(int i=framesize;i<noofpages;i++){
+        if(!is_present(sequence[i],frame,framesize)){
+            frame[search(frame,framesize,sequence,noofpages,i)]=sequence[i];
+            faults++;
+        }
+        else 
+            hits++;
+    }
+    cout<<"Faults: "<<faults<<endl;
+    cout<<"Hits: "<<hits<<endl;
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+//LRU
+
+#include <iostream>
+using namespace std;
+bool is_present(int n, int frame[], int f){
+    int flag = 0;
+    for (int i = 0; i < f; i++){
+        if (frame[i] == n){
+            flag = 1;
+            break;
+        }
+    }
+    if (flag == 1)
+        return true;
+    else
+        return false;
+}
+
+int list_rank(int frame[], int f){
+    int min = frame[0];
+    int idx = 0;
+    for (int i = 1; i < f; i++){
+        if (frame[i] < min){
+            min = frame[i];
+            idx = i;
+        }
+    }
+    return idx;
+}
+int main(){
+    int s;
+    cout << "Enter the number of pages: ";
+    cin >> s;
+    int sequence[s];
+    cout << "Enter the name of pages: " << endl;
+    for (int i = 0; i < s; i++){
+        cin >> sequence[i];
+    }
+    int f;
+    cout << "Enter the number of frames: ";
+    cin >> f;
+    int faults = f, hits = 0, p = 0;
+    int frame[f], time[f] = {0};
+    for (int i = 0; i < f; i++){
+        frame[i] = sequence[i];
+        time[i] = i;
+        cout << "time[" << frame[i] << "]" << time[i] << endl;
+    }
+    cout << endl;
+    for (int i = f; i < s; i++){
+        if (!is_present(sequence[i], frame, f)){
+            cout << sequence[i] << endl;
+            int ret = list_rank(frame, f);
+            cout << "Function value: " << ret << endl;
+            cout << "Old value at: " << ret << " is: " << frame[ret] << endl;
+            frame[ret] = sequence[i];
+            time[ret] = time[ret] + 1;
+            for (int i = 0; i < f; i++){
+                cout << "time[" << frame[i] << "]" << time[i] << endl;
+            }
+            cout << endl;
+            faults++;
+        }
+        else{
+            hits++;
+            for (int j = 0; j < f; j++){
+                if (frame[j] == sequence[i]){
+                    time[j] = time[j] + 1;
+                    break;
+                }
+            }
+            for (int i = 0; i < f; i++){
+                cout << "time[" << frame[i] << "]" << time[i] << endl;
+            }
+            cout << endl;
+        }
+    }
+    cout << "faults: " << faults << endl;
+    cout << "Hits: " << hits << endl;
+    return 0;
+}
